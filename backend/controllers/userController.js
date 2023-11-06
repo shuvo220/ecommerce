@@ -1,5 +1,5 @@
 const User = require('../models/userModel');
-
+const bcrypt = require('bcryptjs');
 
 
 //register a user
@@ -13,8 +13,36 @@ exports.registerUser = async(req, res)=>{
             url:'profile picture'
         }
     })
+    const token = user.getJWTToken();
     res.status(201).json({
         success:true,
-        user
+        token
+    });
+}
+
+//login user
+exports.loginUser =async(req, res)=>{
+    const{email, password} = req.body;
+    if(!email || !password){
+        res.status(400).json('please fillout all fields');
+    }
+
+    const user = await User.findOne({email}).select('+password');
+
+    if(!user){
+        res.status(400).json('user not found');
+    }
+
+    const isPasswordMatched = await user.comparePassword(password);
+
+    if(!isPasswordMatched){
+        res.status(400).json('invalid email or password');
+    }
+
+    const token = user.getJWTToken();
+
+    res.status(200).json({
+        message:'login success',
+        token 
     });
 }
